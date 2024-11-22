@@ -5,7 +5,7 @@ const fs = require('fs');
 export class AppService {
 
   async getMasterCatalog(): Promise<any> {
-    fs.readFile('./master-catalog.json', 'utf8', (err, jsonString) => {
+    fs.readFile(process.env.MASTER_CATALOG_JSON_PATH, 'utf8', (err, jsonString) => {
         if (err) {
             console.log("Error reading MASTER CATALOG DATA file from disk:", err)
             return
@@ -22,7 +22,7 @@ export class AppService {
   }
 
   async isKeyInMasterCatalog(key: string): Promise<any> {
-    fs.readFile('./master-catalog.json', 'utf8', (err, jsonString) => {
+    fs.readFile(process.env.MASTER_CATALOG_JSON_PATH, 'utf8', (err, jsonString) => {
         if (err) {
             console.log("Error reading MASTER CATALOG DATA file from disk:", err)
             return
@@ -40,24 +40,52 @@ export class AppService {
     })
   }
 
-  
+  async addNewKey(key: string): Promise<any> {
 
-  async addNewKey(newKey: string): Promise<any> {
-
-    const { isKeyInMasterCatalog, masterCatalog } = await this.isKeyInMasterCatalog(newKey);
+    const { isKeyInMasterCatalog, masterCatalog } = await this.isKeyInMasterCatalog(key);
 
     if (isKeyInMasterCatalog) {
-      return `Key: ${newKey} already present in Master Catalog`;
+      return `Key: ${key} already present in Master Catalog`;
     }
 
     const updatedMasterCatalog = {
       ...masterCatalog,
-      [newKey]: newKey
+      [key]: key
     }
 
+    return await this.replaceMasterCatalog(updatedMasterCatalog, `Key: ${key} added successfully`)
+  }
+
+  async replaceMasterCatalog(catalog: any, onSuccessString: string): Promise<any> {
     fs.writeFile(
-      "./master-catalog.json", 
-      JSON.stringify(updatedMasterCatalog),
+      process.env.MASTER_CATALOG_JSON_PATH, 
+      JSON.stringify(catalog),
+      err => {
+          if (err) {
+              console.log("Error writing MASTER CATALOG DATA file to disk:", err)
+              return
+          }
+          try {
+              return onSuccessString;
+
+          } catch(err) {
+              console.log('Error parsing MASTER CATALOG DATA JSON :', err)
+          }
+      }
     );
+  }
+
+
+  async deleteKey(key: string): Promise<any> {
+
+    const { isKeyInMasterCatalog, masterCatalog } = await this.isKeyInMasterCatalog(key);
+
+    if (!isKeyInMasterCatalog) {
+      return `Key: ${key} is not in master catalog`;
+    }
+
+    delete masterCatalog[key];
+
+    return await this.replaceMasterCatalog(masterCatalog, `Key: ${key} was removed successfully`)
   }
 }

@@ -1,22 +1,27 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get("master-catalog-api")
+  @Get()
   async getMasterCatalog(): Promise<any> {
     return await this.appService.getMasterCatalog();
   }
 
-  @Post("master-catalog-api/check-key")
-  async isKeyInMasterCatalog(key: string): Promise<any> {
+  @Post("check-key")
+  async isKeyInMasterCatalog(@Body() key: string): Promise<any> {
     return await this.appService.isKeyInMasterCatalog(key);
   }
 
-  @Post("master-catalog-api")
-  async addNewKey(newKey: string): Promise<any> {
-    return await this.appService.addNewKey(newKey);
+  @Post()
+  async addNewKey(@Body() key: string): Promise<any> {
+    return await this.appService.addNewKey(key);
+  }
+
+  @Delete()
+  async deleteKey(@Body() key: string): Promise<any> {
+    return await this.appService.deleteKey(key);
   }
 }
